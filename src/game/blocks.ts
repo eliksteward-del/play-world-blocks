@@ -102,7 +102,7 @@ function createBlockTexture(color: number, isTop = false, isGrass = false): THRE
   return mat;
 }
 
-const materialCache = new Map<string, THREE.MeshLambertMaterial>();
+const materialCache = new Map<string, THREE.MeshLambertMaterial[]>();
 
 export function getBlockMaterials(blockType: BlockType): THREE.MeshLambertMaterial[] {
 const key = `block_${blockType}`;
