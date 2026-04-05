@@ -96,7 +96,7 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
         {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="text-3xl font-black tracking-tight text-foreground">
-            <span className="text-primary">bloxd</span>
+            <span className="text-primary">blocold</span>
             <span className="text-accent">.io</span>
           </div>
         </div>
