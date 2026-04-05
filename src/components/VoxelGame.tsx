@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { GameEngine } from "../game/engine";
 import { GameHUD } from "./GameHUD";
+import { LobbyHUD } from "./LobbyHUD";
 
-export function VoxelGame() {
+interface VoxelGameProps {
+  gameMode: string;
+  lobbyId: string;
+  onLeave: () => void;
+}
+
+export function VoxelGame({ gameMode, lobbyId, onLeave }: VoxelGameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const [selectedSlot, setSelectedSlot] = useState(0);
@@ -17,7 +24,6 @@ export function VoxelGame() {
     const engine = new GameEngine(containerRef.current, handleSlotChange);
     engineRef.current = engine;
 
-    // Prevent context menu on right click
     const preventContext = (e: Event) => e.preventDefault();
     containerRef.current.addEventListener("contextmenu", preventContext);
 
@@ -31,6 +37,7 @@ export function VoxelGame() {
     <div className="relative h-screen w-screen overflow-hidden bg-background">
       <div ref={containerRef} className="h-full w-full" />
       <GameHUD selectedSlot={selectedSlot} />
+      <LobbyHUD gameMode={gameMode} lobbyId={lobbyId} onLeave={onLeave} />
     </div>
   );
 }
