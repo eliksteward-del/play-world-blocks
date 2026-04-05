@@ -105,10 +105,9 @@ function createBlockTexture(color: number, isTop = false, isGrass = false): THRE
 const materialCache = new Map<string, THREE.MeshLambertMaterial>();
 
 export function getBlockMaterials(blockType: BlockType): THREE.MeshLambertMaterial[] {
-  const key = `block_${blockType}`;
-  if (materialCache.has(key)) {
-    return materialCache.get(key + "_arr") as THREE.MeshLambertMaterial[];
-  }
+const key = `block_${blockType}`;
+  const cached = materialCache.get(key);
+  if (cached) return cached;
 
   const colors = BLOCK_COLORS[blockType];
   if (!colors) return [];
@@ -118,9 +117,7 @@ export function getBlockMaterials(blockType: BlockType): THREE.MeshLambertMateri
   const bottom = createBlockTexture(colors.bottom);
   const side = createBlockTexture(colors.side);
 
-  // Order: +x, -x, +y, -y, +z, -z
   const mats = [side, side, top, bottom, side, side];
-  materialCache.set(key, top);
-  materialCache.set(key + "_arr", mats as any);
+  materialCache.set(key, mats);
   return mats;
 }
