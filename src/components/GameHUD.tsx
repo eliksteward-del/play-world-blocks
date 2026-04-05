@@ -1,10 +1,13 @@
 import { HOTBAR_BLOCKS, BLOCK_COLORS, BLOCK_NAMES } from "../game/blocks";
+import type { DevInfo } from "../game/engine";
 
 interface GameHUDProps {
   selectedSlot: number;
+  isDev?: boolean;
+  devInfo?: DevInfo | null;
 }
 
-export function GameHUD({ selectedSlot }: GameHUDProps) {
+export function GameHUD({ selectedSlot, isDev, devInfo }: GameHUDProps) {
   return (
     <div className="pointer-events-none fixed inset-0 z-10">
       {/* Crosshair */}
@@ -62,7 +65,22 @@ export function GameHUD({ selectedSlot }: GameHUDProps) {
         <p>WASD - Move | Space - Jump | Shift - Sprint</p>
         <p>Left Click - Break | Right Click - Place</p>
         <p>Scroll / 1-9 - Select Block</p>
+        {isDev && <p className="mt-1 text-[#f97316]/80">F - Fly | G - No-Clip | 2× Speed</p>}
       </div>
+
+      {/* Dev overlay */}
+      {isDev && devInfo && (
+        <div className="absolute top-4 right-4 rounded-xl border border-[#f97316]/30 bg-[#111728]/90 px-3 py-2 text-xs text-white/85 shadow-[0_10px_30px_rgba(4,8,20,0.4)] backdrop-blur-sm font-mono">
+          <div className="mb-1 flex items-center gap-1.5">
+            <span className="rounded bg-[#f97316] px-1.5 py-0.5 text-[10px] font-black text-black">🔧 DEV</span>
+            {devInfo.flyMode && <span className="rounded bg-sky-500 px-1.5 py-0.5 text-[10px] font-bold text-white">FLY</span>}
+            {devInfo.noClip && <span className="rounded bg-purple-500 px-1.5 py-0.5 text-[10px] font-bold text-white">NOCLIP</span>}
+          </div>
+          <p>XYZ: {devInfo.pos.x} / {devInfo.pos.y} / {devInfo.pos.z}</p>
+          <p>Chunk: {devInfo.chunk.cx}, {devInfo.chunk.cz}</p>
+          <p>FPS: {devInfo.fps}</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -17,6 +17,16 @@ const MOVE_SPEED = 5;
 const SPRINT_MULTIPLIER = 1.6;
 const PLAYER_HEIGHT = 1.7;
 const PLAYER_RADIUS = 0.3;
+const DEV_SPEED_MULTIPLIER = 2;
+const FLY_SPEED = 10;
+
+export interface DevInfo {
+  pos: { x: number; y: number; z: number };
+  chunk: { cx: number; cz: number };
+  fps: number;
+  flyMode: boolean;
+  noClip: boolean;
+}
 
 export class GameEngine {
   private renderer: THREE.WebGLRenderer;
@@ -32,17 +42,25 @@ export class GameEngine {
   private onGround = false;
   private selectedSlot = 0;
   private onSlotChange?: (slot: number) => void;
+  private onDevInfo?: (info: DevInfo) => void;
   private animFrameId = 0;
   private lastTime = 0;
   private canvas: HTMLCanvasElement;
   private highlightMesh: THREE.LineSegments;
   private raycaster = new THREE.Raycaster();
+  private isDev = false;
+  private flyMode = false;
+  private noClip = false;
+  private fpsSmooth = 60;
 
   constructor(
     container: HTMLElement,
-    onSlotChange: (slot: number) => void
+    onSlotChange: (slot: number) => void,
+    options?: { isDev?: boolean; onDevInfo?: (info: DevInfo) => void }
   ) {
     this.onSlotChange = onSlotChange;
+    this.isDev = options?.isDev ?? false;
+    this.onDevInfo = options?.onDevInfo;
 
     this.canvas = document.createElement("canvas");
     container.appendChild(this.canvas);
@@ -113,6 +131,17 @@ export class GameEngine {
     if (e.code >= "Digit1" && e.code <= "Digit9") {
       this.selectedSlot = parseInt(e.code.replace("Digit", "")) - 1;
       this.onSlotChange?.(this.selectedSlot);
+    }
+    // Dev-only keybinds
+    if (this.isDev) {
+      if (e.code === "KeyF") {
+        this.flyMode = !this.flyMode;
+        if (!this.flyMode) this.velocity.y = 0;
+      }
+      if (e.code === "KeyG") {
+        this.noClip = !this.noClip;
+        if (!this.noClip) this.flyMode = false;
+      }
     }
   };
 
@@ -289,10 +318,28 @@ export class GameEngine {
 
   private loop = (time: number) => {
     const dt = Math.min((time - this.lastTime) / 1000, 0.05);
+    this.fpsSmooth = this.fpsSmooth * 0.9 + (1 / Math.max(dt, 0.001)) * 0.1;
     this.lastTime = time;
 
     this.update(dt);
     this.render();
+
+    if (this.isDev && this.onDevInfo) {
+      const pcx = Math.floor(this.playerPos.x / CHUNK_SIZE);
+      const pcz = Math.floor(this.playerPos.z / CHUNK_SIZE);
+      this.onDevInfo({
+        pos: {
+          x: Math.round(this.playerPos.x * 10) / 10,
+          y: Math.round(this.playerPos.y * 10) / 10,
+          z: Math.round(this.playerPos.z * 10) / 10,
+        },
+        chunk: { cx: pcx, cz: pcz },
+        fps: Math.round(this.fpsSmooth),
+        flyMode: this.flyMode,
+        noClip: this.noClip,
+      });
+    }
+
     this.animFrameId = requestAnimationFrame(this.loop);
   };
 
@@ -301,7 +348,9 @@ export class GameEngine {
     const forward = new THREE.Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw));
     const right = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
 
-    const speed = this.keys.has("ShiftLeft") ? MOVE_SPEED * SPRINT_MULTIPLIER : MOVE_SPEED;
+    const isSprinting = this.keys.has("ShiftLeft");
+    const devBoost = this.isDev ? DEV_SPEED_MULTIPLIER : 1;
+    const speed = (isSprinting ? MOVE_SPEED * SPRINT_MULTIPLIER : MOVE_SPEED) * devBoost;
     const moveDir = new THREE.Vector3();
 
     if (this.keys.has("KeyW")) moveDir.add(forward);
@@ -311,43 +360,60 @@ export class GameEngine {
 
     if (moveDir.length() > 0) moveDir.normalize();
 
-    this.velocity.x = moveDir.x * speed;
-    this.velocity.z = moveDir.z * speed;
+    if (this.flyMode) {
+      // Fly mode: full 3-axis control, no gravity
+      const flySpeed = FLY_SPEED * devBoost;
+      this.velocity.x = moveDir.x * flySpeed;
+      this.velocity.z = moveDir.z * flySpeed;
+      this.velocity.y = 0;
+      if (this.keys.has("Space")) this.velocity.y = flySpeed;
+      if (isSprinting) this.velocity.y = -flySpeed;
+    } else {
+      this.velocity.x = moveDir.x * speed;
+      this.velocity.z = moveDir.z * speed;
 
-    // Gravity
-    this.velocity.y += GRAVITY * dt;
+      // Gravity
+      this.velocity.y += GRAVITY * dt;
 
-    // Jump
-    if (this.keys.has("Space") && this.onGround) {
-      this.velocity.y = JUMP_SPEED;
-      this.onGround = false;
+      // Jump
+      if (this.keys.has("Space") && this.onGround) {
+        this.velocity.y = JUMP_SPEED;
+        this.onGround = false;
+      }
     }
 
-    // Collision detection
+    // Collision detection (skipped in no-clip mode)
     const newPos = this.playerPos.clone();
 
-    // X movement
-    newPos.x += this.velocity.x * dt;
-    if (this.checkCollision(newPos)) {
-      newPos.x = this.playerPos.x;
-      this.velocity.x = 0;
-    }
-
-    // Z movement
-    newPos.z += this.velocity.z * dt;
-    if (this.checkCollision(newPos)) {
-      newPos.z = this.playerPos.z;
-      this.velocity.z = 0;
-    }
-
-    // Y movement
-    newPos.y += this.velocity.y * dt;
-    if (this.checkCollision(newPos)) {
-      if (this.velocity.y < 0) this.onGround = true;
-      newPos.y = this.playerPos.y;
-      this.velocity.y = 0;
-    } else {
+    if (this.noClip) {
+      newPos.x += this.velocity.x * dt;
+      newPos.y += this.velocity.y * dt;
+      newPos.z += this.velocity.z * dt;
       this.onGround = false;
+    } else {
+      // X movement
+      newPos.x += this.velocity.x * dt;
+      if (this.checkCollision(newPos)) {
+        newPos.x = this.playerPos.x;
+        this.velocity.x = 0;
+      }
+
+      // Z movement
+      newPos.z += this.velocity.z * dt;
+      if (this.checkCollision(newPos)) {
+        newPos.z = this.playerPos.z;
+        this.velocity.z = 0;
+      }
+
+      // Y movement
+      newPos.y += this.velocity.y * dt;
+      if (this.checkCollision(newPos)) {
+        if (this.velocity.y < 0) this.onGround = true;
+        newPos.y = this.playerPos.y;
+        this.velocity.y = 0;
+      } else {
+        this.onGround = false;
+      }
     }
 
     this.playerPos.copy(newPos);
