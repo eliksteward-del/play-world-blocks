@@ -21,7 +21,7 @@ const GAME_MODES = [
 ];
 
 export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) => void }) {
-  const { user, profile, isDev, isSuper, signOut, loading } = useAuth();
+  const { user, profile, isDev, isSuper, signOut } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [onlineCount, setOnlineCount] = useState(0);
   const [lobbyCount, setLobbyCount] = useState<Record<string, number>>({});
@@ -62,55 +62,57 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
   }, []);
 
   const getRankBadge = () => {
-    if (isDev) return <span className="rounded bg-red-600 px-2 py-0.5 text-xs font-bold text-white">DEV</span>;
-    if (isSuper) return <span className="rounded bg-yellow-500 px-2 py-0.5 text-xs font-bold text-black">⚡ SUPER</span>;
+    if (isDev) return <span className="rounded-sm bg-[#ff160a] px-2 py-0.5 text-[11px] font-black tracking-wide text-white">DEV</span>;
+    if (isSuper) return <span className="rounded-sm bg-[#ffc400] px-2 py-0.5 text-[11px] font-black tracking-wide text-black">⚡ SUPER</span>;
     return null;
   };
 
+  const customWorlds = [1, 2, 3, 4, 5, 6];
+
   return (
-    <div className="fixed inset-0 z-20 overflow-auto" style={{ background: "linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" }}>
+    <div className="fixed inset-0 z-20 overflow-auto bg-[#1d3f76]">
       {/* Top bar - bloxd.io style */}
-      <div className="flex items-center justify-between border-b border-border/30 bg-black/40 px-4 py-2">
+      <div className="flex items-center justify-between border-b border-[#242945] bg-[#151725]/95 px-4 py-2.5 shadow-[inset_0_-1px_0_rgba(255,255,255,0.03)]">
         <div className="flex items-center gap-4">
           {user ? (
             <>
               <button
                 onClick={signOut}
-                className="flex items-center gap-2 rounded-lg bg-secondary/50 px-4 py-2 text-sm font-medium text-foreground transition hover:bg-secondary"
+                className="flex items-center gap-2 rounded-xl border border-white/8 bg-[#1e2c44] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#253754]"
               >
                 👤 Logout
               </button>
-              <span className="font-bold text-foreground">{profile?.username || "Player"}</span>
+              <span className="text-sm font-black text-white [text-shadow:0_1px_0_rgba(0,0,0,0.35)]">{profile?.username || "Player"}</span>
               {getRankBadge()}
             </>
           ) : (
             <button
               onClick={() => setAuthOpen(true)}
-              className="flex items-center gap-2 rounded-lg bg-secondary/50 px-4 py-2 text-sm font-medium text-foreground transition hover:bg-secondary"
+              className="flex items-center gap-2 rounded-xl border border-white/8 bg-[#1e2c44] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#253754]"
             >
-              👤 Login
+              <span className="text-[#30a3ff]">👤</span> Login
             </button>
           )}
         </div>
 
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="text-3xl font-black tracking-tight text-foreground">
-            <span className="text-primary">blocold</span>
-            <span className="text-accent">.io</span>
+          <div className="text-3xl font-black tracking-tight [text-shadow:0_2px_0_rgba(0,0,0,0.3)]">
+            <span className="text-[#32c235]">blocold</span>
+            <span className="text-[#d1583f]">.io</span>
           </div>
         </div>
 
         {/* Right side icons */}
-        <div className="flex items-center gap-3">
-          <button className="rounded p-2 text-foreground/60 transition hover:bg-secondary/50 hover:text-foreground">🎵</button>
-          <button className="rounded p-2 text-foreground/60 transition hover:bg-secondary/50 hover:text-foreground">🔊</button>
-          <button className="rounded p-2 text-foreground/60 transition hover:bg-secondary/50 hover:text-foreground">⚙️</button>
-          <div className="text-right text-xs text-muted-foreground">
+        <div className="flex items-center gap-4">
+          <button className="rounded p-1 text-xl text-white/40 transition hover:text-white/75">🎵</button>
+          <button className="rounded p-1 text-xl text-white/40 transition hover:text-white/75">🔊</button>
+          <button className="rounded p-1 text-xl text-white/40 transition hover:text-white/75">⚙️</button>
+          <div className="text-right text-xs text-[#9bb0d6]">
             <div>0</div>
             <div>Requests</div>
           </div>
-          <div className="text-right text-xs text-muted-foreground">
+          <div className="text-right text-xs text-[#9bb0d6]">
             <div>0</div>
             <div>Friends</div>
           </div>
@@ -118,13 +120,13 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
       </div>
 
       {/* Action bar */}
-      <div className="flex items-center justify-center gap-4 border-b border-border/20 bg-black/20 px-4 py-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>👥</span>
-          <span className="font-bold text-foreground">{onlineCount.toLocaleString()}</span>
+      <div className="flex flex-wrap items-center justify-center gap-4 border-b border-[#242f55] bg-[#1b2343]/95 px-4 py-2 shadow-[inset_0_-1px_0_rgba(255,255,255,0.03)]">
+        <div className="flex items-center gap-2 text-sm font-black text-white">
+          <span className="text-[#30a3ff]">👥</span>
+          <span>{onlineCount.toLocaleString()}</span>
         </div>
         {!isSuper && (
-          <button className="rounded-full bg-yellow-500 px-4 py-1.5 text-sm font-bold text-black transition hover:bg-yellow-400">
+          <button className="rounded-full bg-[#ffc400] px-4 py-1.5 text-sm font-black text-black shadow-[inset_0_-2px_0_rgba(0,0,0,0.18)] transition hover:brightness-105">
             ⚡ Get Super Rank
           </button>
         )}
@@ -132,7 +134,7 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
       </div>
 
       {/* Game mode grid */}
-      <div className="mx-auto max-w-7xl px-4 py-6">
+      <div className="mx-auto max-w-[1280px] px-4 py-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
           {GAME_MODES.map((mode) => (
             <GameModeCard
@@ -146,22 +148,23 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
 
         {/* Custom Games section */}
         <div className="mt-8">
-          <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-foreground">
-            Custom Games <span className="text-muted-foreground">→</span>
+          <h2 className="mb-3 flex items-center gap-2 text-[20px] font-black tracking-[0.01em] text-white [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">
+            Custom Games <span className="text-[#92a8d4]">→</span>
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
+            {customWorlds.map((i) => (
+              <button
                 key={i}
-                className="group cursor-pointer overflow-hidden rounded-lg border border-border/30 bg-card/50 transition hover:border-primary/50 hover:bg-card"
+                type="button"
+                className="group overflow-hidden rounded-2xl border border-[#314f86] bg-[#25313f] text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-[#4d6ea8]"
                 onClick={() => onPlay("sandbox")}
               >
-                <div className="aspect-video bg-gradient-to-br from-secondary to-muted" />
-                <div className="p-2">
-                  <p className="text-xs font-medium text-foreground">Custom World {i}</p>
-                  <p className="text-[10px] text-muted-foreground">👥 {Math.floor(Math.random() * 100)}</p>
+                <div className="aspect-video bg-[#2b333f]" />
+                <div className="border-t border-white/4 bg-[#162f53] p-2">
+                  <p className="text-[13px] font-medium text-white">Custom World {i}</p>
+                  <p className="text-[11px] font-semibold text-[#2aa6ff]">👥 {Math.floor(Math.random() * 100)}</p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
