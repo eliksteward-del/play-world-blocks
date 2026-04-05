@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { BlockType } from "./blocks";
+import { BlockType, HOTBAR_BLOCKS } from "./blocks";
 import { buildChunkMesh } from "./chunk-mesh";
 import {
   generateChunk,
