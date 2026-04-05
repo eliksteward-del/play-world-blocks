@@ -159,7 +159,7 @@ export class GameEngine {
       const dy = placePos.y - this.playerPos.y;
       if (Math.abs(dx) < 0.8 && Math.abs(dz) < 0.8 && dy > -PLAYER_HEIGHT && dy < 0.3) return;
 
-      const { HOTBAR_BLOCKS } = require("./blocks");
+      
       this.setWorldBlock(placePos.x, placePos.y, placePos.z, HOTBAR_BLOCKS[this.selectedSlot]);
     }
   };
