@@ -20,6 +20,8 @@ const GAME_MODES = [
   { id: "murder", name: "Murder Mystery", players: 0, color: "#673AB7", desc: "Find the murderer among you" },
 ];
 
+const CUSTOM_WORLD_SLOTS = Array.from({ length: 6 }, (_, index) => index + 1);
+
 export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) => void }) {
   const { user, profile, isDev, isSuper, signOut } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
@@ -66,8 +68,6 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
     if (isSuper) return <span className="rounded-sm bg-[#ffc400] px-2 py-0.5 text-[11px] font-black tracking-wide text-black">⚡ SUPER</span>;
     return null;
   };
-
-  const customWorlds = [1, 2, 3, 4, 5, 6];
 
   return (
     <div className="fixed inset-0 z-20 overflow-auto bg-[#1d3f76]">
@@ -152,7 +152,7 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
             Custom Games <span className="text-[#92a8d4]">→</span>
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {customWorlds.map((i) => (
+            {CUSTOM_WORLD_SLOTS.map((i) => (
               <button
                 key={i}
                 type="button"
