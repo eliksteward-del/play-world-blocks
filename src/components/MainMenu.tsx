@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "./AuthModal";
 import { GameModeCard } from "./GameModeCard";
@@ -27,6 +27,17 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
   const [authOpen, setAuthOpen] = useState(false);
   const [onlineCount, setOnlineCount] = useState(0);
   const [lobbyCount, setLobbyCount] = useState<Record<string, number>>({});
+  const fallbackModeCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        GAME_MODES.map((mode) => [mode.id, Math.floor(Math.random() * 500)]),
+      ) as Record<string, number>,
+    [],
+  );
+  const fallbackCustomWorldCounts = useMemo(
+    () => CUSTOM_WORLD_SLOTS.map(() => Math.floor(Math.random() * 100)),
+    [],
+  );
 
   useEffect(() => {
     // Fetch lobby counts by game mode
@@ -60,7 +71,9 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getRankBadge = () => {
@@ -140,7 +153,7 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
             <GameModeCard
               key={mode.id}
               mode={mode}
-              playerCount={lobbyCount[mode.id] || Math.floor(Math.random() * 500)}
+              playerCount={lobbyCount[mode.id] || fallbackModeCounts[mode.id]}
               onClick={() => onPlay(mode.id)}
             />
           ))}
@@ -162,7 +175,7 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
                 <div className="aspect-video bg-[#2b333f]" />
                 <div className="border-t border-white/4 bg-[#162f53] p-2">
                   <p className="text-[13px] font-medium text-white">Custom World {i}</p>
-                  <p className="text-[11px] font-semibold text-[#2aa6ff]">👥 {Math.floor(Math.random() * 100)}</p>
+                  <p className="text-[11px] font-semibold text-[#2aa6ff]">👥 {fallbackCustomWorldCounts[i - 1]}</p>
                 </div>
               </button>
             ))}
