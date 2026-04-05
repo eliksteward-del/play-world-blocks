@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "./AuthModal";
 import { GameModeCard } from "./GameModeCard";
@@ -6,38 +6,29 @@ import { PartyPanel } from "./PartyPanel";
 import { supabase } from "@/integrations/supabase/client";
 
 const GAME_MODES = [
-  { id: "sandbox", name: "Sandbox Survival", players: 0, popular: true, color: "#4CAF50", desc: "Build and survive in an open world" },
-  { id: "creative", name: "Sandbox Creative", players: 0, color: "#2196F3", desc: "Unlimited building with no limits" },
-  { id: "peaceful", name: "Sandbox Peaceful", players: 0, color: "#8BC34A", desc: "Relax and build without threats" },
-  { id: "bedwars", name: "Bedwars", players: 0, popular: true, color: "#F44336", desc: "Protect your bed, destroy enemies" },
-  { id: "skywars", name: "Skywars", players: 0, color: "#9C27B0", desc: "Fight on floating islands" },
-  { id: "1v1", name: "1v1 Fights", players: 0, ranked: true, color: "#FF9800", desc: "Duel other players" },
-  { id: "plots", name: "Plots", players: 0, color: "#00BCD4", desc: "Build on your own plot" },
-  { id: "oneblock", name: "One Block", players: 0, popular: true, color: "#E91E63", desc: "Expand from a single block" },
-  { id: "cubewarfare", name: "Cube Warfare", players: 0, color: "#795548", desc: "FPS combat with blocks" },
-  { id: "greenville", name: "Greenville", players: 0, popular: true, color: "#4CAF50", desc: "Roleplay in a virtual city" },
-  { id: "laststand", name: "Last Stand", players: 0, color: "#FF5722", desc: "Survive waves of enemies" },
-  { id: "murder", name: "Murder Mystery", players: 0, color: "#673AB7", desc: "Find the murderer among you" },
+  { id: "sandbox", name: "Sandbox Survival", players: 242, popular: true, color: "#4CAF50", desc: "Build and survive in an open world" },
+  { id: "creative", name: "Sandbox Creative", players: 46, color: "#2196F3", desc: "Unlimited building with no limits" },
+  { id: "peaceful", name: "Sandbox Peaceful", players: 50, color: "#8BC34A", desc: "Relax and build without threats" },
+  { id: "bedwars", name: "Bedwars", players: 273, popular: true, color: "#F44336", desc: "Protect your bed, destroy enemies" },
+  { id: "skywars", name: "Skywars", players: 111, color: "#9C27B0", desc: "Fight on floating islands" },
+  { id: "1v1", name: "1v1 Fights", players: 346, ranked: true, color: "#FF9800", desc: "Duel other players" },
+  { id: "plots", name: "Plots", players: 119, color: "#00BCD4", desc: "Build on your own plot" },
+  { id: "oneblock", name: "One Block", players: 11, popular: true, color: "#E91E63", desc: "Expand from a single block" },
+  { id: "cubewarfare", name: "Cube Warfare", players: 157, color: "#795548", desc: "FPS combat with blocks" },
+  { id: "greenville", name: "Greenville", players: 483, popular: true, color: "#4CAF50", desc: "Roleplay in a virtual city" },
+  { id: "laststand", name: "Last Stand", players: 446, color: "#FF5722", desc: "Survive waves of enemies" },
+  { id: "murder", name: "Murder Mystery", players: 362, color: "#673AB7", desc: "Find the murderer among you" },
 ];
 
 const CUSTOM_WORLD_SLOTS = Array.from({ length: 6 }, (_, index) => index + 1);
+const CUSTOM_WORLD_PLAYERS = [58, 28, 63, 91, 29, 9];
+const FALLBACK_ONLINE_COUNT = 2646;
 
 export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) => void }) {
   const { user, profile, isDev, isSuper, signOut } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [onlineCount, setOnlineCount] = useState(0);
   const [lobbyCount, setLobbyCount] = useState<Record<string, number>>({});
-  const fallbackModeCounts = useMemo(
-    () =>
-      Object.fromEntries(
-        GAME_MODES.map((mode) => [mode.id, Math.floor(Math.random() * 500)]),
-      ) as Record<string, number>,
-    [],
-  );
-  const fallbackCustomWorldCounts = useMemo(
-    () => CUSTOM_WORLD_SLOTS.map(() => Math.floor(Math.random() * 100)),
-    [],
-  );
 
   useEffect(() => {
     // Fetch lobby counts by game mode
@@ -53,7 +44,7 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
           total += l.current_players;
         });
         setLobbyCount(counts);
-        setOnlineCount(total || Math.floor(Math.random() * 5000) + 1000);
+        setOnlineCount(total || FALLBACK_ONLINE_COUNT);
       });
 
     // Subscribe to lobby changes
@@ -153,7 +144,7 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
             <GameModeCard
               key={mode.id}
               mode={mode}
-              playerCount={lobbyCount[mode.id] || fallbackModeCounts[mode.id]}
+              playerCount={lobbyCount[mode.id] || mode.players}
               onClick={() => onPlay(mode.id)}
             />
           ))}
@@ -175,7 +166,7 @@ export function MainMenu({ onPlay }: { onPlay: (mode: string, lobbyId?: string) 
                 <div className="aspect-video bg-[#2b333f]" />
                 <div className="border-t border-white/4 bg-[#162f53] p-2">
                   <p className="text-[13px] font-medium text-white">Custom World {i}</p>
-                  <p className="text-[11px] font-semibold text-[#2aa6ff]">👥 {fallbackCustomWorldCounts[i - 1]}</p>
+                  <p className="text-[11px] font-semibold text-[#2aa6ff]">👥 {CUSTOM_WORLD_PLAYERS[i - 1]}</p>
                 </div>
               </button>
             ))}
